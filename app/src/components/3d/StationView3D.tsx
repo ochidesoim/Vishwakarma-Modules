@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
+import { OrbitControls, Stars, Environment } from '@react-three/drei';
 import { useStationStore } from '../../store/useStationStore';
 import { Module3D } from './Module3D';
 import { Suspense } from 'react';
@@ -34,7 +34,7 @@ export function StationView3D() {
 
                     {/* Environment */}
                     <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-                    {/* <Environment preset="city" /> Optional reflection */}
+                    <Environment preset="city" />
 
                     {/* Modules */}
                     {modules.map((module) => (

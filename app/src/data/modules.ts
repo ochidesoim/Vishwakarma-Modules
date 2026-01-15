@@ -44,7 +44,7 @@ export const MODULE_SPECS: Record<string, ModuleSpec> = {
     },
     fab: {
         type: 'fab',
-        title: 'Manufacturing Fab',
+        title: 'Manufacturing Lab',
         description: 'In-space manufacturing of high-value products like ZBLAN fibers and semiconductors.',
         icon: '🏭',
         color: 'bg-green-500/50',

@@ -1,9 +1,10 @@
-import { useRef, useState, useLayoutEffect } from 'react';
+import { useRef, useState, useLayoutEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Box, Sphere, Cylinder, Dodecahedron, Text } from '@react-three/drei';
+import { Box, Sphere, Cylinder, Capsule, Text, useGLTF, Center } from '@react-three/drei';
 import type { ModuleType } from '../../types/station';
 import { MODULE_SPECS } from '../../data/modules';
 import type { Mesh } from 'three';
+import * as THREE from 'three';
 
 interface Module3DProps {
     type: ModuleType;
@@ -12,24 +13,36 @@ interface Module3DProps {
     onClick?: () => void;
 }
 
+// Reusable Truss Segment
+function Truss({ length }: { length: number }) {
+    return (
+        <group>
+            {/* Main Beams */}
+            <Box args={[0.2, 0.2, length]} position={[0.3, 0.3, 0]}> <meshStandardMaterial color="#4b5563" /> </Box>
+            <Box args={[0.2, 0.2, length]} position={[-0.3, 0.3, 0]}> <meshStandardMaterial color="#4b5563" /> </Box>
+            <Box args={[0.2, 0.2, length]} position={[0.3, -0.3, 0]}> <meshStandardMaterial color="#4b5563" /> </Box>
+            <Box args={[0.2, 0.2, length]} position={[-0.3, -0.3, 0]}> <meshStandardMaterial color="#4b5563" /> </Box>
+            <Box args={[0.5, 0.5, length]} position={[0, 0, 0]}>
+                <meshStandardMaterial color="#1f2937" wireframe opacity={0.3} transparent />
+            </Box>
+        </group>
+    );
+}
+
 export function Module3D({ type, position, isSelected: _isSelected, onClick }: Module3DProps) {
     const meshRef = useRef<Mesh>(null);
     const [hovered, setHover] = useState(false);
 
-    // Scaling effect on hover
+    // Hover Animation
     useFrame((_, _delta) => {
         if (meshRef.current) {
-            if (hovered) {
-                meshRef.current.scale.lerp({ x: 1.1, y: 1.1, z: 1.1 }, 0.1);
-            } else {
-                meshRef.current.scale.lerp({ x: 1, y: 1, z: 1 }, 0.1);
-            }
+            const targetScale = hovered ? 1.05 : 1;
+            meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
         }
     });
 
     useLayoutEffect(() => {
         if (meshRef.current) {
-            // Face the center (0,0,0) unless we ARE the center
             if (position[0] !== 0 || position[2] !== 0) {
                 meshRef.current.lookAt(0, 0, 0);
             }
@@ -38,49 +51,76 @@ export function Module3D({ type, position, isSelected: _isSelected, onClick }: M
 
     const spec = MODULE_SPECS[type];
 
-    // Geometry Switcher
-    const renderGeometry = () => {
-        // Rotation to align "Height" (Y) along Radial Axis (Z)
-        // Since lookAt(0,0,0) makes -Z point to target? Or +Z? 
-        // Threejs lookAt: +Z axis points to target.
-        // So we want geometry's "Long" axis to be Z.
-        // Cylinder default is Y. Rotate X 90 -> Z.
-        const alignZ: [number, number, number] = [Math.PI / 2, 0, 0];
-        // Box default X=width, Y=height, Z=depth.
-        // Fab Box [1.8, 1.2, 1.2]. 1.8 is X. Rotate Y 90 -> 1.8 is Z.
-        const alignBoxZ: [number, number, number] = [0, Math.PI / 2, 0];
+    // --- IMPORTED MODEL ---
+    const ImportedModel = ({ scale = 2.5, rotation = [0, 0, 0] }: { scale?: number, rotation?: [number, number, number] }) => {
+        // Load the user's GLB
+        const { scene } = useGLTF('/models/Meshy_AI__Vishwakarma_Modular_0115130558_texture.glb');
+        const clone = useMemo(() => scene.clone(), [scene]);
 
+        // Center the model to fix offset issues and scale it up
+        return (
+            <Center top>
+                <primitive object={clone} scale={scale} rotation={rotation} />
+            </Center>
+        );
+    };
+
+    // --- PROCEDURAL GEOMETRIES ---
+
+    const InflatableHab = ({ color = "#f8fafc" }) => (
+        <group rotation={[Math.PI / 2, 0, 0]}>
+            <Capsule args={[0.9, 2.5, 4, 16]}> <meshStandardMaterial color={color} roughness={0.9} /> </Capsule>
+            <group position={[0, 0.5, 0.85]}> <Cylinder args={[0.2, 0.2, 0.2, 16]} rotation={[Math.PI / 2, 0, 0]}> <meshStandardMaterial color="#1e293b" /> </Cylinder> </group>
+            <group position={[0, -0.5, 0.85]}> <Cylinder args={[0.2, 0.2, 0.2, 16]} rotation={[Math.PI / 2, 0, 0]}> <meshStandardMaterial color="#1e293b" /> </Cylinder> </group>
+            <Cylinder args={[0.92, 0.92, 0.2, 32]} position={[0, 1.2, 0]}> <meshStandardMaterial color="#475569" metalness={0.8} /> </Cylinder>
+            <Cylinder args={[0.92, 0.92, 0.2, 32]} position={[0, -1.2, 0]}> <meshStandardMaterial color="#475569" metalness={0.8} /> </Cylinder>
+        </group>
+    );
+
+    const PowerTruss = () => (
+        <group rotation={[Math.PI / 2, 0, 0]}>
+            <Truss length={2.5} />
+            <Cylinder args={[0.6, 0.6, 0.4]} rotation={[0, 0, Math.PI / 2]}> <meshStandardMaterial color="#cbd5e1" metalness={0.8} /> </Cylinder>
+            <group position={[2, 0, 0]}>
+                <Box args={[3.5, 0.05, 1.2]}> <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.1} /> </Box>
+                <Box args={[3.6, 0.1, 0.1]} position={[0, 0, 0]}> <meshStandardMaterial color="#fbbf24" /> </Box>
+            </group>
+            <group position={[-2, 0, 0]}>
+                <Box args={[3.5, 0.05, 1.2]}> <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.1} /> </Box>
+                <Box args={[3.6, 0.1, 0.1]} position={[0, 0, 0]}> <meshStandardMaterial color="#fbbf24" /> </Box>
+            </group>
+        </group>
+    );
+
+    // --- RENDER SELECTION ---
+
+    const renderGeometry = () => {
+        // Use Imported Model for Hub and Industrial Modules (to showcase it)
         switch (type) {
-            case 'hub':
-                return <Dodecahedron args={[1.2, 0]}> <meshStandardMaterial color="#fbbf24" metalness={0.8} roughness={0.2} /> </Dodecahedron>;
-            case 'lab':
-            case 'health':
-                return <Cylinder args={[0.8, 0.8, 2, 16]} rotation={alignZ}> <meshStandardMaterial color={type === 'health' ? '#ef4444' : '#3b82f6'} metalness={0.5} roughness={0.5} /> </Cylinder>;
-            case 'fab':
-                return <Box args={[1.8, 1.2, 1.2]} rotation={alignBoxZ}> <meshStandardMaterial color="#22c55e" metalness={0.6} roughness={0.4} /> </Box>;
-            case 'power':
+            case 'hub': return <ImportedModel scale={3} />; // Make Hub Huge
+            case 'fab': return <ImportedModel scale={2.5} rotation={[0, Math.PI / 2, 0]} />;
+            case 'cargo': return <ImportedModel scale={2.5} rotation={[0, Math.PI / 2, 0]} />; // Use import for cargo too
+
+            case 'lab': return <InflatableHab color="#f1f5f9" />;
+            case 'quarters': return <InflatableHab color="#e0e7ff" />;
+            case 'hydro':
                 return (
-                    // Rotate entire group to align Z
-                    <group rotation={alignZ}>
-                        {/* Central Hub (lying on Z now) */}
-                        <Box args={[0.5, 2, 0.5]} position={[0, 0, 0]}> <meshStandardMaterial color="#eab308" /> </Box>
-                        {/* Panels (Wings sticking out X) */}
-                        <Box args={[3, 0.1, 1]} position={[0, 0.8, 0]}> <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} /> </Box>
-                        <Box args={[3, 0.1, 1]} position={[0, -0.8, 0]}> <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} /> </Box>
+                    <group>
+                        <Sphere args={[1.3, 32, 32]}> <meshStandardMaterial color="#10b981" transparent opacity={0.3} roughness={0} metalness={0.9} /> </Sphere>
+                        <Box args={[0.8, 0.8, 0.8]}> <meshStandardMaterial color="#22c55e" wireframe /> </Box>
                     </group>
                 );
-            case 'hydro':
-                return <Sphere args={[1, 16, 16]}> <meshStandardMaterial color="#10b981" transparent opacity={0.8} /> </Sphere>;
+            case 'power': return <PowerTruss />;
             case 'airlock':
-                return <Sphere args={[0.8, 16, 16]}> <meshStandardMaterial color="#06b6d4" metalness={0.7} roughness={0.2} /> </Sphere>;
-            case 'cargo':
-                return <Box args={[1.5, 1.5, 1.5]}> <meshStandardMaterial color="#f97316" roughness={0.8} /> </Box>;
-            case 'quarters':
-                return <Cylinder args={[1, 1, 2.2, 8]} rotation={alignZ}> <meshStandardMaterial color="#6366f1" /> </Cylinder>;
-            case 'repair':
-                return <Box args={[1.5, 0.5, 1.5]} rotation={alignBoxZ}> <meshStandardMaterial color="#6b7280" wireframe /> </Box>;
-            default:
-                return <Box args={[1, 1, 1]}> <meshStandardMaterial color="#9ca3af" /> </Box>;
+                return (
+                    <group>
+                        <Sphere args={[1, 32, 32]}> <meshStandardMaterial color="#cbd5e1" metalness={0.8} /> </Sphere>
+                        <Cylinder args={[0.4, 0.4, 0.2]} position={[0, 0, 1]} rotation={[Math.PI / 2, 0, 0]}> <meshStandardMaterial color="#333" /> </Cylinder>
+                        <Box args={[0.1, 0.1, 0.05]} position={[0.3, 0.3, 0.9]}> <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={2} /> </Box>
+                    </group>
+                );
+            case 'repair': return <ImportedModel scale={2} />;
+            default: return <Box args={[1, 1, 1]}> <meshStandardMaterial color="#9ca3af" /> </Box>;
         }
     };
 
@@ -95,30 +135,28 @@ export function Module3D({ type, position, isSelected: _isSelected, onClick }: M
                 {renderGeometry()}
             </mesh>
 
-            {/* Label on hover */}
             {hovered && (
                 <Text
-                    position={[0, 1.5, 0]}
-                    fontSize={0.3}
+                    position={[0, 2, 0]}
+                    fontSize={0.4}
                     color="white"
                     anchorX="center"
                     anchorY="middle"
-                    outlineWidth={0.02}
+                    outlineWidth={0.03}
                     outlineColor="black"
                 >
                     {spec.title}
                 </Text>
             )}
 
-            {/* Connection struts (visual only) */}
             {type !== 'hub' && (
-                // Strut pointing to center (Z axis local)
-                // Length 1.5 (half spacing).
-                // Position 1.5 Z? No, local Z points to center.
-                <Cylinder args={[0.1, 0.1, 3]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 1.5]}>
-                    <meshStandardMaterial color="#374151" />
-                </Cylinder>
+                <group ref={(node) => node?.lookAt(0, 0, 0)}>
+                    <Truss length={3} />
+                </group>
             )}
         </group>
     );
 }
+
+// Preload the model to avoid pop-in
+useGLTF.preload('/models/Meshy_AI__Vishwakarma_Modular_0115130558_texture.glb');
