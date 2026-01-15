@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vishwakarma Modules | Project LEO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --saffron: #FF9933;
+            --indigo: #0a192f;
+            --gold: #FFD700;
+            --off-white: #F3EFE0;
+            --cyan: #38bdf8;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--indigo);
+            color: var(--off-white);
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+        }
+
+        .font-display {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+        }
+
+        .text-saffron {
+            color: var(--saffron);
+        }
+
+        .text-gold {
+            color: var(--gold);
+        }
+
+        .text-cyan {
+            color: var(--cyan);
+        }
+
+        .module-bay {
+            background-color: rgba(6, 17, 33, 0.8);
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .module-bay:hover,
+        .module-bay.selected-bay {
+            background-color: rgba(23, 42, 69, 0.9);
+            border-style: solid;
+            border-color: var(--saffron);
+        }
+
+        .module-bay.installed:hover {
+            border-color: var(--cyan);
+        }
+
+        .module-option {
+            background: rgba(23, 42, 69, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .module-option:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+        }
+
+        .module-option.selected {
+            border-color: var(--saffron);
+            box-shadow: 0 0 20px var(--saffron);
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+
+    <header class="py-6 px-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="index.html" class="font-display text-3xl text-saffron">LumenOrb</a>
+            <a href="page2.html"
+                class="bg-saffron/20 border border-saffron text-saffron font-semibold py-2 px-6 rounded-lg hover:bg-saffron hover:text-indigo transition-all">
+                &larr; Back to Mission
+            </a>
+        </div>
+    </header>
+
+    <main class="py-12 px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center">
+                <h1 class="font-display text-4xl md:text-5xl text-saffron">Vishwakarma Commercial Hub</h1>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-300">
+                    The heart of LumenOrb's architecture. Select a module from the palette, then plug it into an
+                    available bay to configure your commercial mission.
+                </p>
+            </div>
+
+            <div class="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Center: Interactive ship section -->
+                <div class="lg:col-span-2 p-8 rounded-lg flex flex-col items-center justify-center"
+                    style="background: rgba(6, 17, 33, 0.5);">
+                    <div id="info-panel"
+                        class="w-full h-48 p-6 mb-8 text-center border-2 border-dashed border-gold/30 rounded-lg flex flex-col justify-center">
+                        <h3 id="info-title" class="font-display text-2xl text-gold">Awaiting Configuration</h3>
+                        <p id="info-description" class="mt-2 text-gray-400">Select a module from the palette to begin.
+                        </p>
+                        <button id="eject-button"
+                            class="hidden mx-auto mt-4 bg-red-500/80 text-white font-bold py-1 px-4 rounded-lg hover:bg-red-500 transition-colors">Eject
+                            Module</button>
+                    </div>
+                    <!-- Ship Bays -->
+                    <div class="w-full max-w-md">
+                        <p class="text-center font-display text-lg text-cyan mb-4">LumenOrb Ship Configuration</p>
+                        <div class="grid grid-cols-3 grid-rows-3 gap-4 h-96">
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="1">1</div>
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="2">2</div>
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="3">3</div>
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="4">4</div>
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="5">5</div>
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="6">6</div>
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="7">7</div>
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="8">8</div>
+                            <div class="module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30"
+                                data-bay="9">9</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Module selection -->
+                <div class="p-6 rounded-lg" style="background: rgba(6, 17, 33, 0.5);">
+                    <h3 class="font-display text-2xl text-center text-cyan mb-6">Module Palette</h3>
+                    <div id="module-palette" class="space-y-4">
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="lab">
+                            <div class="text-4xl">🔬</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Zero-G Lab</h4>
+                                <p class="text-sm text-gray-400">Pharmaceuticals & material science.</p>
+                            </div>
+                        </button>
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="fab">
+                            <div class="text-4xl">🏭</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Manufacturing Fab</h4>
+                                <p class="text-sm text-gray-400">Fiber optics & ZBLAN production.</p>
+                            </div>
+                        </button>
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="data">
+                            <div class="text-4xl">🛰️</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Data Center</h4>
+                                <p class="text-sm text-gray-400">Edge computing & secure cloud.</p>
+                            </div>
+                        </button>
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="hydro">
+                            <div class="text-4xl">🌱</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Hydroponics Bay</h4>
+                                <p class="text-sm text-gray-400">Life support & food research.</p>
+                            </div>
+                        </button>
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="repair">
+                            <div class="text-4xl">🔧</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Service Station</h4>
+                                <p class="text-sm text-gray-400">Refuel, repair & upgrade satellites.</p>
+                            </div>
+                        </button>
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="power">
+                            <div class="text-4xl">⚡️</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Power Station</h4>
+                                <p class="text-sm text-gray-400">Charge & power external spacecraft.</p>
+                            </div>
+                        </button>
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="health">
+                            <div class="text-4xl">⚕️</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Health Care</h4>
+                                <p class="text-sm text-gray-400">Telemedicine & medical research.</p>
+                            </div>
+                        </button>
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="airlock">
+                            <div class="text-4xl">🧑‍🚀</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Crew Airlock</h4>
+                                <p class="text-sm text-gray-400">Personnel entry, exit, and EVA prep.</p>
+                            </div>
+                        </button>
+                        <button class="module-option w-full text-left p-4 rounded-lg flex items-center space-x-4"
+                            data-module-type="cargo">
+                            <div class="text-4xl">📦</div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gold">Cargo Bay</h4>
+                                <p class="text-sm text-gray-400">Load/unload manufactured materials.</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modulePalette = document.getElementById('module-palette');
+            const moduleBays = document.querySelectorAll('.module-bay');
+            const infoTitle = document.getElementById('info-title');
+            const infoDescription = document.getElementById('info-description');
+            const ejectButton = document.getElementById('eject-button');
+
+            let selectedModuleType = null;
+            let activeBay = null;
+
+            const moduleData = {
+                lab: { title: 'Zero-G Laboratory', description: 'This module is equipped for microgravity research, enabling breakthroughs in pharmaceuticals, protein crystallization, and material science that are impossible on Earth.', icon: '🔬', color: 'bg-blue-500/50' },
+                fab: { title: 'Manufacturing Fabricator', description: 'Specialized for in-space manufacturing of high-value products like flawless fiber optics (ZBLAN) and perfect semiconductor crystals.', icon: '🏭', color: 'bg-green-500/50' },
+                data: { title: 'Orbital Data Center', description: 'A secure, off-planet node for edge computing and critical data storage. Offers unparalleled security and global data routing capabilities.', icon: '🛰️', color: 'bg-purple-500/50' },
+                hydro: { title: 'Hydroponics Bay', description: 'A closed-loop agricultural module for researching plant growth in space. It supplements life support systems and provides fresh food for the crew.', icon: '🌱', color: 'bg-emerald-500/50' },
+                repair: { title: 'Satellite Service Station', description: 'A robotic bay for capturing, refueling, repairing, and upgrading existing satellites, extending their operational life and reducing orbital debris.', icon: '🔧', color: 'bg-gray-500/50' },
+                power: { title: 'Power Station', description: 'Equipped with advanced solar arrays and battery storage, this module acts as an orbital charging station for other spacecraft and LumenOrb itself.', icon: '⚡️', color: 'bg-yellow-500/50' },
+                health: { title: 'Health Care Facility', description: 'A state-of-the-art telemedicine hub and research center for studying the effects of microgravity on the human body, serving both crew and remote patients.', icon: '⚕️', color: 'bg-red-500/50' },
+                airlock: { title: 'Crew Airlock', description: 'Primary module for Extra-Vehicular Activities (EVAs). Allows scientists and engineers to enter and exit the LumenOrb safely.', icon: '🧑‍🚀', color: 'bg-cyan-500/50' },
+                cargo: { title: 'Cargo Bay', description: 'A large, unpressurized bay for docking with cargo vessels, allowing for the transfer of raw materials and finished products manufactured on board.', icon: '📦', color: 'bg-orange-500/50' }
+            };
+
+            // 1. Handle Module Selection
+            modulePalette.addEventListener('click', (e) => {
+                const option = e.target.closest('.module-option');
+                if (!option) return;
+
+                if (option.classList.contains('selected')) {
+                    selectedModuleType = null;
+                    option.classList.remove('selected');
+                    infoTitle.textContent = 'Awaiting Configuration';
+                    infoDescription.textContent = 'Select a module from the palette to begin.';
+                } else {
+                    modulePalette.querySelector('.selected')?.classList.remove('selected');
+                    option.classList.add('selected');
+                    selectedModuleType = option.dataset.moduleType;
+                    const data = moduleData[selectedModuleType];
+                    infoTitle.textContent = `Selected: ${data.title}`;
+                    infoDescription.textContent = 'Now, click an empty bay to install this module.';
+                }
+                ejectButton.classList.add('hidden');
+            });
+
+            // 2. Handle Bay Interaction
+            moduleBays.forEach(bay => {
+                bay.addEventListener('click', () => {
+                    const installedModule = bay.dataset.installedModule;
+                    activeBay = bay;
+
+                    if (selectedModuleType && !installedModule) {
+                        installModule(bay, selectedModuleType);
+                    }
+                    else if (!selectedModuleType && installedModule) {
+                        displayModuleInfo(bay);
+                    }
+                    else if (selectedModuleType && installedModule) {
+                        installModule(bay, selectedModuleType);
+                    }
+                });
+            });
+
+            function installModule(bay, moduleType) {
+                const data = moduleData[moduleType];
+                bay.innerHTML = `<div class="text-4xl fade-in">${data.icon}</div>`;
+                bay.className = 'module-bay rounded-lg flex items-center justify-center text-4xl installed';
+                bay.classList.add(data.color);
+                bay.dataset.installedModule = moduleType;
+
+                displayModuleInfo(bay);
+
+                modulePalette.querySelector('.selected')?.classList.remove('selected');
+                selectedModuleType = null;
+            }
+
+            function displayModuleInfo(bay) {
+                const moduleType = bay.dataset.installedModule;
+                if (!moduleType) return;
+
+                const data = moduleData[moduleType];
+                infoTitle.textContent = `Bay ${bay.dataset.bay}: ${data.title}`;
+                infoDescription.textContent = data.description;
+                ejectButton.classList.remove('hidden');
+
+                moduleBays.forEach(b => b.classList.remove('selected-bay'));
+                bay.classList.add('selected-bay');
+            }
+
+            // 3. Handle Eject Button
+            ejectButton.addEventListener('click', () => {
+                if (!activeBay || !activeBay.dataset.installedModule) return;
+
+                const bayNumber = activeBay.dataset.bay;
+                activeBay.innerHTML = `<div class="fade-in">${bayNumber}</div>`;
+                activeBay.className = 'module-bay rounded-lg flex items-center justify-center text-4xl text-gold/30';
+                delete activeBay.dataset.installedModule;
+
+                infoTitle.textContent = `Bay ${bayNumber} is now empty.`;
+                infoDescription.textContent = 'Select a new module from the palette to install.';
+                ejectButton.classList.add('hidden');
+                activeBay = null;
+            });
+        });
+    </script>
+</body>
+
+</html>
