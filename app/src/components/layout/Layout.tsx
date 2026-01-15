@@ -29,6 +29,13 @@ export function Layout({ children, leftPanel, rightPanel, onOpenMethodology }: L
                     {rightPanel}
                 </section>
             </main>
+
+            {/* Watermark */}
+            <img
+                src={`${import.meta.env.BASE_URL}gurutva_logo.jpg`}
+                alt="GURUTVA"
+                className="fixed bottom-4 right-4 h-12 opacity-80 pointer-events-none z-50"
+            />
         </div>
     );
 }

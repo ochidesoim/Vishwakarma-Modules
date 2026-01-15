@@ -53,8 +53,8 @@ export function Module3D({ type, position, isSelected: _isSelected, onClick }: M
 
     // --- IMPORTED MODEL ---
     const ImportedModel = ({ scale = 2.5, rotation = [0, 0, 0] }: { scale?: number, rotation?: [number, number, number] }) => {
-        // Load the user's GLB
-        const { scene } = useGLTF('/models/Meshy_AI__Vishwakarma_Modular_0115130558_texture.glb');
+        // Load the user's GLB using dynamic BASE_URL for GitHub Pages compatibility
+        const { scene } = useGLTF(`${import.meta.env.BASE_URL}models/Meshy_AI__Vishwakarma_Modular_0115130558_texture.glb`);
         const clone = useMemo(() => scene.clone(), [scene]);
 
         // Center the model to fix offset issues and scale it up
@@ -159,4 +159,4 @@ export function Module3D({ type, position, isSelected: _isSelected, onClick }: M
 }
 
 // Preload the model to avoid pop-in
-useGLTF.preload('/models/Meshy_AI__Vishwakarma_Modular_0115130558_texture.glb');
+useGLTF.preload(`${import.meta.env.BASE_URL}models/Meshy_AI__Vishwakarma_Modular_0115130558_texture.glb`);
