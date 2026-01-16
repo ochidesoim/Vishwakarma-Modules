@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import type { Transform } from '@dnd-kit/utilities';
 import type { ModuleType } from '../../types/station';
 import type { ModuleSpec } from '../../types/station';
 import { cn } from '../../lib/utils';
@@ -16,8 +17,18 @@ export function DraggableModule({ module, isSelected, onSelect }: DraggableModul
         id: module.type,
     });
 
+    const transformString = (transform: Transform | null) => {
+        if (!transform) return undefined;
+        // Safety check for dnd-kit utilities in production
+        if (CSS && CSS.Translate && typeof CSS.Translate.toString === 'function') {
+            return CSS.Translate.toString(transform);
+        }
+        // Fallback for when CSS.Translate is missing
+        return `translate3d(${transform.x}px, ${transform.y}px, 0)`;
+    };
+
     const style = transform ? {
-        transform: CSS.Translate.toString(transform),
+        transform: transformString(transform),
     } : undefined;
 
     return (

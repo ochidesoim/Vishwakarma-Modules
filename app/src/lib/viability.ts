@@ -8,9 +8,10 @@
 // import { formatMoney } from './warnings'; // Removed to avoid circular dependency
 
 function formatMoney(value: number): string {
-    if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
-    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}M`;
-    if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
+    if (value === undefined || value === null || isNaN(value)) return '0';
+    if (Math.abs(value) >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+    if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}M`;
+    if (Math.abs(value) >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
     return value.toString();
 }
 

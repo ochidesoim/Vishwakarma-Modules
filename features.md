@@ -1,351 +1,292 @@
-# Vishwakarma - Complete Feature Documentation
+# COMPLETE FIX & ADD LIST
 
-> Commercial Space Station Designer - Financial & Technical Analysis Tool
+## PRIORITY 1: CRITICAL FIXES
 
----
+### 1. ADD LAUNCH COSTS TO CAPEX
+- Create launch vehicle database (Falcon 9, Falcon Heavy, Starship, Vulcan)
+- Calculate launches needed based on total station mass
+- Add $15M integration cost per launch
+- **Add totalLaunchCost to CAPEX calculation**
+- Display: Vehicle selector, # launches, cost breakdown
 
-## Table of Contents
+### 2. CUT REVENUE BY 50-70%
+- Zero-G Lab: $300K → $100K/month
+- Manufacturing Lab: $500K → $150K/month
+- Data Center: $150K → $40K/month
+- Service Station: $2.5M → $500K/month
+- Health Care: $200K → $50K/month
+- Add tooltip showing revenue assumptions for each module
 
-1. [Station Design Features](#station-design-features)
-2. [Financial Analysis](#financial-analysis)
-3. [Physics & Engineering](#physics--engineering)
-4. [Reliability & Risk](#reliability--risk)
-5. [Visualization & UX](#visualization--ux)
-6. [Mathematical Models](#mathematical-models)
+### 3. ADD OPEX MODEL
+- Mission Control: $50M/year (crewed) or $15M (uncrewed)
+- Crew Rotation: $150M/year (2 Dragon flights)
+- Cargo Resupply: $300M/year (crewed) or $80M (uncrewed)
+- Ground Staff: $100M/year (crewed) or $30M (uncrewed)
+- Insurance: 5% of asset value annually
+- Maintenance: 2% of asset value annually
+- **Update NPV: Monthly Cash Flow = Revenue - (OPEX/12)**
+- Display OPEX breakdown table, warn if OPEX > Revenue
 
----
+### 4. ADD LIFE SUPPORT SYSTEMS
+Add to Module interface:
+- `crewCapacity` (number)
+- `eclssPower` (kW for life support)
+- `eclssMass` (kg for ECLSS equipment)
+- `consumablesMass` (kg initial supplies)
 
-## Station Design Features
+Update modules:
+- Crew Quarters: +15 kW ECLSS, +3000 kg equipment, +2000 kg consumables
+- Health Care: +8 kW ECLSS, +1500 kg equipment, +500 kg consumables
+- Validation: Crew modules require airlock, minimum 2-person crew
+- Display: Life Support row in Systems Status
 
-### 3×3 Module Grid System
+### 5. ADD ATTITUDE CONTROL SYSTEM (ACS)
+- Calculate moment of inertia (Ixx, Iyy, Izz)
+- Calculate asymmetry factor = max(I)/min(I)
+- ACS propellant = base × √(asymmetry factor)
+- Warn if asymmetry > 1.5
+- Display: Asymmetry factor with color coding, add ACS fuel to budget
 
-| Bay | Position | Usage |
-|-----|----------|-------|
-| 1-9 | Radial around Hub | Install modules via drag-drop or click |
+### 6. ADD DOCKING PORTS MODULE
+New module type:
+- Mass: 2000 kg
+- Power: 1 kW
+- CAPEX: $80M
+- Validation: Crewed stations need minimum 2 ports
+- Warn if no docking ports on stations with >3 modules
 
-**Hub** (always present): Central command node providing base power (60kW) and thermal (40kW).
+### 7. ADD BATTERY STORAGE
+Update Power Station:
+- `batteryCapacity`: 50 kWh
+- `batteryMass`: 500 kg
+- Calculate eclipse energy requirements (40% of 90-min orbit)
+- Warn if insufficient battery for eclipse
+- Display: Energy Storage row showing capacity vs. requirements
 
-### Available Modules
-
-| Module | Mass (kg) | Power (kW) | Thermal (kW) | CAPEX ($M) | Monthly Revenue |
-|--------|-----------|------------|--------------|------------|-----------------|
-| Zero-G Laboratory | 12,000 | 8 | 12 | $270M | $300K |
-| Manufacturing Lab | 15,000 | 12 | 20 | $330M | $500K |
-| Orbital Data Center | 8,000 | 20 | 25 | $210M | $150K |
-| Hydroponics Bay | 10,000 | 5 | 4 | $240M | $50K |
-| Service Station | 14,000 | 4 | 8 | $350M | $2.5M |
-| Power Station | 11,000 | 0 | 0 | $180M | $5K |
-| Health Care | 9,000 | 6 | 6 | $290M | $200K |
-| Crew Airlock | 6,000 | 2 | 2 | $150M | $0 |
-| Cargo Bay | 5,000 | 1 | 1 | $100M | $80K |
-| Crew Quarters | 14,000 | 6 | 8 | $320M | $100K |
-
-### Module Dependencies
-
-```
-Manufacturing Lab → requires Airlock
-Zero-G Laboratory → requires Airlock
-Hydroponics Bay → requires Airlock
-Health Care → requires Airlock
-```
-
----
-
-## Financial Analysis
-
-### Net Present Value (NPV)
-
-**Formula:**
-```
-NPV = -CAPEX + Σ(Monthly Cash Flow / (1 + r)^t)
-```
-
-Where:
-- `r` = Monthly discount rate = Annual Rate / 12
-- `t` = Month (1 to 120 for 10 years)
-- `Monthly Cash Flow` = Revenue - OPEX
-
-**Default Parameters:**
-- Discount Rate: 10% annual
-- Analysis Period: 10 years (120 months)
-
-### Internal Rate of Return (IRR)
-
-Calculated via binary search for rate where NPV = 0.
-
-**Range:** -50% to 200% annual
-
-### Break-Even Analysis
-
-**Formula:**
-```
-Break-Even Months = CAPEX / (Monthly Revenue - Monthly OPEX)
-```
-
-### Sensitivity Analysis
-
-Adjustable parameters:
-- Base revenue multiplier (0.5x - 2.0x)
-- OPEX adjustment (0.5x - 2.0x)
-- Discount rate (5% - 20%)
+### 8. ADD RADIATION SHIELDING
+- Add `radiationShielding` boolean to crew modules
+- Calculate annual dose: 100 mSv baseline × shielding factor
+- Shielding mass: 2000 kg per crew module
+- Add $40M CAPEX for shielding
+- NASA limit: 50 mSv/year
+- Display: Radiation dose, warn if exceeds limit
 
 ---
 
-## Physics & Engineering
+## PRIORITY 2: FIX BROKEN FEATURES
 
-### Power System
+### 9. DELETE LAUNCH WINDOWS FEATURE
+- Remove `getLaunchWindows()` function
+- Delete Launch Windows display
+- (Already replaced by Launch Vehicle Selection in #1)
 
-**Balance Equation:**
-```
-Power Available = Hub Generation (60kW) + Power Stations (40kW each)
-Power Required = Σ(Module Continuous Power)
-Surplus = Available - Required
-```
+### 10. REPLACE RISK EVENTS WITH FMEA
+Delete random risk events, replace with:
+- Single Point of Failure detection (power, airlock, etc.)
+- Micrometeoroid probability calculation (not random)
+- Thermal margin risk
+- Display FMEA table sorted by risk score
+- Show top 5 risks with mitigations
 
-**Constraints:**
-- Module installation blocked if `Required > Available`
-- Warning at <20% margin
-
-### Thermal Management
-
-**Heat Balance:**
-```
-Thermal Capacity = Hub Radiators (40kW) + Power Station Radiators (20kW each)
-Thermal Load = Σ(Module Thermal Output)
-Utilization = Load / Capacity × 100%
-```
-
-**Critical thresholds:**
-- Warning: >70% utilization
-- Critical: >90% utilization
-
-### Station-Keeping Requirements
-
-Based on ISS reference data:
-- Reference: ISS at 420,000 kg uses ~200 kg/month propellant
-- Orbital altitude: 400 km (LEO)
-- Inclination: 51.6°
-
-**Formula:**
-```
-Monthly Propellant = 200 × (Station Mass / 420,000) kg
-Reboost Frequency = 30-45 days (high mass) or 45-60 days (low mass)
-10-Year Fuel Mass = Monthly Propellant × 120 months
-10-Year Fuel Cost = Fuel Mass × $5,000/kg
-```
-
-### Launch Windows
-
-- **Frequency:** ~2 per month for ISS-compatible orbit
-- **Per Quarter:** 6 windows
-- **Optimal Months:** March, June, September, December
-
-### Center of Mass
-
-Calculated as weighted centroid of installed modules:
-```
-CoM_x = Σ(module_mass × bay_x) / total_mass
-CoM_y = Σ(module_mass × bay_y) / total_mass
-```
+### 11. ENFORCE SOLAR DEGRADATION
+- Reduce available power by 2.5% per year
+- Update NPV to account for declining revenue over time
+- Display: "Year X: Y kW available" in Power panel
+- Show degradation curve in Reliability panel
 
 ---
 
-## Reliability & Risk
+## PRIORITY 3: ENHANCEMENTS
 
-### Mean Time Between Failures (MTBF)
+### 12. ADD ASSEMBLY SEQUENCE ANALYSIS
+- Generate step-by-step assembly timeline
+- Calculate required EVAs per step
+- Estimate assembly duration (weeks)
+- Calculate assembly costs
+- Display: New "Assembly" tab with timeline
 
-| Module Type | MTBF (months) | Years | 10-Year Failure Probability |
-|-------------|---------------|-------|----------------------------|
-| Hub | 180 | 15 | 49% |
-| Cargo Bay | 168 | 14 | 51% |
-| Crew Airlock | 156 | 13 | 54% |
-| Power Station | 144 | 12 | 57% |
-| Crew Quarters | 132 | 11 | 60% |
-| Zero-G Lab | 120 | 10 | 63% |
-| Service Station | 108 | 9 | 67% |
-| Manufacturing | 96 | 8 | 71% |
-| Health Care | 96 | 8 | 71% |
-| Hydroponics | 84 | 7 | 76% |
-| Data Center | 72 | 6 | 81% |
+### 13. ADD CREW CONSUMABLES CALCULATOR
+- Calculate O₂, water, food requirements per year
+- Account for recycling (80% O₂, 90% water)
+- Calculate resupply flights needed
+- Add to OPEX: consumables resupply cost
+- Display: Mass breakdown in Systems panel
 
-**Failure Probability Formula (Exponential Distribution):**
-```
-P(failure in t months) = 1 - e^(-t/MTBF)
-```
+### 14. ADD COMPARISON MODE
+- Compare user design vs. ISS and Axiom Station
+- Show mass ratio, power ratio, crew ratio, cost ratio
+- Calculate cost per kg
+- Display: Side-by-side comparison table
 
-### Station Reliability
+### 15. ADD WARNING SYSTEM
+Create centralized warnings for:
+- **Economics**: OPEX > Revenue (CRITICAL)
+- **Power**: <20% margin (WARNING)
+- **Crew Safety**: Single airlock (CRITICAL)
+- **Attitude Control**: Asymmetry >1.5 (WARNING)
+- Display: "⚠️ System Warnings" panel with severity color coding
 
-**10-Year Survival Probability:**
-```
-Station Reliability = Π(e^(-120/MTBF_i))
-```
-
-Product of individual module reliability over 10 years.
-
-### Solar Panel Degradation
-
-**Model:** 2.5% degradation per year in LEO
-
-**Formula:**
-```
-Power_year_n = Initial_Power × (1 - 0.025)^n
-```
-
-| Year | Power Remaining | Degradation |
-|------|-----------------|-------------|
-| 0 | 100% | 0% |
-| 5 | 88.1% | 11.9% |
-| 10 | 77.6% | 22.4% |
-
-### Redundancy Analysis
-
-**Single Point of Failure Detection:**
-- Single Power Station → station-wide blackout risk
-- Single Airlock → limited emergency egress
-- Missing Crew Quarters with crew modules
-
-### Risk Events
-
-| Event | Severity | Defense |
-|-------|----------|---------|
-| Meteor Shower | 70% | Shielding |
-| Solar Flare | 60% | Radiation Resistance |
-| System Malfunction | 40% | Repair Capacity |
-
-**Defense Contributions by Module:**
-- Repair Station: +50% repair, +10% shielding
-- Cargo Bay: +15% repair
-- Hub: +20% shielding, +10% radiation
-- Power Station: +20% radiation
-- Airlock: +20% repair
-
-**Survival Score Calculation:**
-```
-Survival Score = Defense% - (Event Severity × 100) + Random(-10 to +10)
-```
-
-| Survival Score | Outcome |
-|----------------|---------|
-| ≥ 20 | Deflected (success) |
-| ≥ -10 | Mitigated (minor damage) |
-| ≥ -30 | Damage Sustained |
-| < -30 | Critical Damage |
+### 16. ADD VIABILITY EXPLAINER
+Calculate and explain:
+- Annual profit/loss
+- Payback period
+- Investment verdict (Viable/Marginal/Not Viable)
+- Specific reasons why design fails
+- "Fix It" suggestions
+- Display: "💡 Viability Check" panel with clear verdict
 
 ---
 
-## Visualization & UX
+## PRIORITY 4: DATA CORRECTIONS
 
-### Power Flow (Sankey)
+### 17. FIX STATION-KEEPING FORMULA
+Current formula is too simple. Add:
+- Cross-sectional area calculation for drag
+- Solar cycle adjustment (±50% variation)
+- Configuration penalty for 3×3 grid (worse drag than linear)
+- Update: `Propellant = f(mass, area, solar_activity)`
 
-Displays:
-- **Generation Sources:** Hub Solar (60kW), Power Stations (+40kW each)
-- **Consumption:** Per-module power draw
-- **Balance:** Surplus/Deficit indicator
+### 18. FIX THERMAL MODEL
+Add physics-based thermal:
+- Solar heating: Q = 1367 W/m² × area × (1-albedo)
+- Earth IR: 237 W/m² × area × view factor
+- Radiator effectiveness: ε×σ×A×T⁴
+- Beta angle variation (sun exposure)
+- Replace static "kW capacity" with dynamic thermal analysis
 
-### Thermal Heatmap
-
-Color-coded grid:
-| Color | Meaning | Threshold |
-|-------|---------|-----------|
-| Blue | Cool | <5% capacity |
-| Yellow | Warm | 5-15% |
-| Orange | Hot | 15-25% |
-| Red | Critical | >25% |
-
-### Crew Time Allocation
-
-Bar chart showing crew distribution across modules with activity breakdown:
-- Research, Experiments, Data Analysis (Lab)
-- Monitoring, Quality Control (Manufacturing)
-- Plant Care, Harvesting (Hydroponics)
-- Patient Care, Equipment Maintenance (Health)
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| 1-9 | Select bay |
-| Escape | Clear selection |
-| Ctrl/⌘ + E | Export PDF |
-| Ctrl/⌘ + Shift + E | Export JSON |
-| Ctrl/⌘ + Shift + S | Save snapshot |
-| Ctrl/⌘ + Shift + R | Reset station |
-
-### Tutorial Overlay
-
-5-step walkthrough for first-time users:
-1. Welcome to Vishwakarma
-2. Station Grid (bay system)
-3. Power & Thermal management
-4. Financial Analysis
-5. Risk & Reliability
-
-Uses `localStorage` to remember completion.
+### 19. ADD REAL COSTS TO MODULES
+Add missing costs:
+- Ground segment: +$150M to station CAPEX
+- Crew training: +$50M/year to OPEX
+- Assembly EVAs: +$300M to CAPEX
+- Launch insurance: +10-15% of CAPEX
 
 ---
 
-## Mathematical Models
+## PRIORITY 5: UI/UX
 
-### Summary of All Formulas
+### 20. ADD REALITY CHECK ALERTS
+When user designs unprofitable station:
+- Pop-up: "⚠️ This station loses $XXX M/year"
+- Show: "Years until bankrupt: X"
+- Force acknowledgment before continuing
 
-| Model | Formula | Source File |
-|-------|---------|-------------|
-| NPV | `-CAPEX + Σ(CF/(1+r)^t)` | `financials.ts` |
-| IRR | Binary search NPV=0 | `financials.ts` |
-| Break-Even | `CAPEX / Net Monthly` | `financials.ts` |
-| Failure Probability | `1 - e^(-t/MTBF)` | `reliability.ts` |
-| Station Reliability | `Π(e^(-120/MTBF_i))` | `reliability.ts` |
-| Solar Degradation | `P₀ × (0.975)^year` | `reliability.ts` |
-| Propellant/Month | `200 × (Mass/420000)` | `physics.ts` |
-| Center of Mass | `Σ(m×pos)/Σm` | `physics.ts` |
-| Risk Defense | `0.4×Shield + 0.3×Rad + 0.3×Repair` | `risk.ts` |
-| ROI | `NPV / CAPEX` | `reliability.ts` |
+### 21. ADD TUTORIAL IMPROVEMENTS
+Current tutorial doesn't explain economics. Add:
+- "Why most stations fail financially" step
+- "Launch costs are 20-30% of budget" step
+- "OPEX always exceeds revenue initially" step
 
-### Constants Used
+### 22. ADD EXPORT IMPROVEMENTS
+Current export is basic. Add to PDF:
+- Executive summary (1 page)
+- Viability verdict
+- Risk assessment (FMEA)
+- Assembly timeline
+- Cost breakdown with launch costs
+- Comparison to reference stations
 
-| Constant | Value | Source |
-|----------|-------|--------|
-| ISS Reference Mass | 420,000 kg | NASA ISS data |
-| ISS Monthly Propellant | 200 kg | NASA ISS operations |
-| LEO Altitude | 400 km | Standard ISS orbit |
-| Inclination | 51.6° | ISS orbital inclination |
-| Fuel Cost to Orbit | $5,000/kg | Industry estimates |
-| Solar Degradation Rate | 2.5%/year | Standard LEO arrays |
-| Analysis Period | 10 years (120 months) | Financial standard |
-
----
-
-## File Structure
-
-```
-app/src/
-├── lib/
-│   ├── financials.ts     # NPV, IRR, Break-Even
-│   ├── physics.ts        # Validation, Station-Keeping, Launch Windows
-│   ├── reliability.ts    # MTBF, Solar Degradation, Redundancy, Trade-Offs
-│   ├── risk.ts           # Risk Events, Defense Calculations
-│   ├── optimization.ts   # AI Recommendations
-│   └── export.ts         # PDF, JSON, CSV export
-├── data/
-│   ├── modules.ts        # Module specifications
-│   └── presets.ts        # Pre-built station configurations
-├── components/
-│   ├── dashboard/
-│   │   ├── FinancialPanel.tsx
-│   │   ├── SystemsStatus.tsx
-│   │   ├── ReliabilityPanel.tsx
-│   │   ├── PowerFlowPanel.tsx
-│   │   ├── ThermalHeatmap.tsx
-│   │   ├── CrewTimePanel.tsx
-│   │   ├── RiskPanel.tsx
-│   │   └── OptimizationPanel.tsx
-│   └── ui/
-│       ├── TutorialOverlay.tsx
-│       └── ConfirmDialog.tsx
-└── hooks/
-    └── useKeyboardShortcuts.tsx
-```
+### 23. ADD KEYBOARD SHORTCUTS
+Already have basic shortcuts, add:
+- **V**: Toggle Viability Check
+- **W**: Show/hide Warnings
+- **C**: Compare to reference
+- **A**: Assembly sequence
+- **F**: FMEA risk analysis
 
 ---
 
-*Last Updated: January 2026*
+## IMPLEMENTATION PRIORITY ORDER
+
+**Week 1-2 (Must Do):**
+1. Add Launch Costs (#1)
+2. Cut Revenue (#2)
+3. Add OPEX (#3)
+4. Add Warnings (#15)
+5. Add Viability Explainer (#16)
+
+**Week 3-4 (Critical Systems):**
+6. Life Support (#4)
+7. ACS (#5)
+8. Docking Ports (#6)
+9. Batteries (#7)
+10. Radiation (#8)
+
+**Week 5-6 (Fix Broken):**
+11. Delete Launch Windows (#9)
+12. Replace Risk Events (#10)
+13. Enforce Solar Degradation (#11)
+14. Fix Station-Keeping (#17)
+
+**Week 7-8 (Polish):**
+15. Assembly Sequence (#12)
+16. Consumables (#13)
+17. Comparison Mode (#14)
+18. Reality Checks (#20)
+19. Export Improvements (#22)
+
+---
+
+## FILES TO MODIFY
+
+**lib/modules.ts:**
+- Add fields: crewCapacity, eclssPower, eclssMass, consumablesMass, batteryCapacity, batteryMass, radiationShielding
+- Add dockingPort module
+- Update all module masses and CAPEX
+
+**lib/financials.ts:**
+- Add calculateLaunchCosts()
+- Add calculateAnnualOPEX()
+- Update calculateNPV() to include OPEX and degradation
+- Add getViabilityExplainer()
+
+**lib/physics.ts:**
+- Add validateLifeSupport()
+- Add calculateMomentOfInertia()
+- Add calculateACSPropellant()
+- Add validateDocking()
+- Add calculatePowerAvailability()
+- Fix station-keeping formula with area and solar cycle
+
+**lib/reliability.ts:**
+- Add calculateRadiationExposure()
+- Update getPowerDegradation() enforcement
+- Add performFMEA() (replace risk events)
+
+**lib/risk.ts:**
+- DELETE random event system
+- Replace with FMEA logic
+
+**components/dashboard/:**
+- Add OPEXPanel.tsx
+- Add ViabilityPanel.tsx
+- Add WarningsPanel.tsx
+- Add AssemblyPanel.tsx
+- Add ComparisonPanel.tsx
+- Update FinancialPanel to show launch costs
+- Update SystemsStatus to show life support, ACS, batteries, radiation
+
+**New files:**
+- lib/launch.ts (launch vehicle database)
+- lib/warnings.ts (warning system)
+- lib/assembly.ts (assembly sequence)
+- lib/consumables.ts (crew consumables)
+
+---
+
+## WHAT THIS FIXES
+
+**Before (Current State):**
+- Tool shows $2.5B station making $40M/year = "profitable"
+- Missing $800M in launch costs
+- Missing $600M/year OPEX
+- **Reality: Station loses $560M/year, bankrupt in 5 years**
+
+**After (Fixed State):**
+- Same station: $3.3B CAPEX (with launches)
+- Revenue: $18M/year (realistic)
+- OPEX: $600M/year
+- **Reality: Station loses $582M/year**
+- **Tool warns: "❌ NOT VIABLE - loses $582M annually"**
+
+Your tool becomes **honest** about space economics instead of accidentally lying to users.
