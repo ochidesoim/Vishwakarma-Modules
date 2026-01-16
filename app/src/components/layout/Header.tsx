@@ -6,9 +6,10 @@ interface HeaderProps {
     onOpenMethodology: () => void;
     onToggleComparison: () => void;
     isComparisonOpen: boolean;
+    onOpenTutorial: () => void;
 }
 
-export function Header({ onOpenMethodology, onToggleComparison, isComparisonOpen }: HeaderProps) {
+export function Header({ onOpenMethodology, onToggleComparison, isComparisonOpen, onOpenTutorial }: HeaderProps) {
     const { modules, metrics, financialParameters } = useStationStore();
 
     const handleExportPDF = () => {
@@ -42,11 +43,21 @@ export function Header({ onOpenMethodology, onToggleComparison, isComparisonOpen
                 <div className="h-4 w-px bg-white/10 mx-2" />
 
                 <button
+                    onClick={onOpenTutorial}
+                    className="flex items-center px-3 py-2 text-sm font-mono text-primary/80 hover:text-primary hover:bg-primary/10 rounded transition-colors border border-transparent"
+                    title="Start Tutorial"
+                >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    TUTORIAL
+                </button>
+                <div className="h-4 w-px bg-white/10 mx-2" />
+
+                <button
                     onClick={onOpenMethodology}
                     className="flex items-center px-3 py-2 text-sm font-mono text-primary/80 hover:text-primary hover:bg-primary/10 rounded transition-colors border border-transparent"
                     title="Methodology & Assumptions"
                 >
-                    <BookOpen className="w-4 h-4 mr-2" />
+                    <Scale className="w-4 h-4 mr-2" />
                     METHODOLOGY
                 </button>
                 <div className="h-4 w-px bg-white/10 mx-2" />

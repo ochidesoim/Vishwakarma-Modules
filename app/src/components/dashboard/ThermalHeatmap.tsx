@@ -61,22 +61,23 @@ export function ThermalHeatmap() {
                 Thermal Heatmap
             </h3>
 
-            {/* Heatmap Grid */}
-            <div className="grid grid-cols-4 gap-1 mb-4">
+            {/* Heatmap List - Optimized for clarity */}
+            <div className="space-y-2 mb-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                 {thermalData.map((data, i) => (
                     <div
                         key={i}
-                        className={`p-2 rounded ${getHeatColor(data.percent)} transition-all hover:scale-105`}
-                        title={`${data.name}: ${data.thermal}kW`}
+                        className="flex items-center justify-between group"
                     >
-                        <div className="text-[9px] text-white/80 truncate">{data.name.split(' ')[0]}</div>
-                        <div className="text-xs font-mono font-bold text-white">{data.thermal}kW</div>
-                    </div>
-                ))}
-                {/* Empty slots if less than 4 modules */}
-                {Array.from({ length: Math.max(0, 4 - thermalData.length) }).map((_, i) => (
-                    <div key={`empty-${i}`} className="p-2 rounded bg-gray-800/30 border border-dashed border-gray-700">
-                        <div className="text-[9px] text-gray-600">Empty</div>
+                        <div className="text-xs text-gray-400 w-1/3 truncate" title={data.name}>{data.name}</div>
+                        <div className="flex-1 mx-3 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full rounded-full ${getHeatColor(data.percent)}`}
+                                style={{ width: `${Math.min(100, data.percent)}%` }}
+                            />
+                        </div>
+                        <div className="text-xs font-mono font-bold text-gray-300 w-12 text-right">
+                            {data.thermal}k
+                        </div>
                     </div>
                 ))}
             </div>
@@ -106,8 +107,8 @@ export function ThermalHeatmap() {
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-gray-400">Cooling Utilization</span>
                     <span className={`font-mono text-xs ${utilization > 90 ? 'text-red-400' :
-                            utilization > 70 ? 'text-orange-400' :
-                                utilization > 50 ? 'text-yellow-400' : 'text-green-400'
+                        utilization > 70 ? 'text-orange-400' :
+                            utilization > 50 ? 'text-yellow-400' : 'text-green-400'
                         }`}>
                         {utilization.toFixed(0)}%
                     </span>
@@ -115,8 +116,8 @@ export function ThermalHeatmap() {
                 <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                     <div
                         className={`h-full rounded-full transition-all ${utilization > 90 ? 'bg-red-500' :
-                                utilization > 70 ? 'bg-orange-500' :
-                                    utilization > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                            utilization > 70 ? 'bg-orange-500' :
+                                utilization > 50 ? 'bg-yellow-500' : 'bg-green-500'
                             }`}
                         style={{ width: `${Math.min(100, utilization)}%` }}
                     />

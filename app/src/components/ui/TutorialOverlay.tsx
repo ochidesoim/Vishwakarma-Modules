@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronRight, ChevronLeft, Rocket, Grid, Zap, DollarSign, Shield } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Rocket, Grid, Zap, DollarSign, Shield, TrendingUp } from 'lucide-react';
 
 interface TutorialStep {
     title: string;
@@ -26,9 +26,19 @@ const TUTORIAL_STEPS: TutorialStep[] = [
         icon: <Zap className="w-8 h-8" />,
     },
     {
-        title: 'Financial Analysis',
-        description: 'Track CAPEX, monthly revenue, and 10-year NPV. Use the AI Optimization Assistant to maximize profitability.',
+        title: 'Launch Economics',
+        description: 'Getting to orbit is expensive! Launch costs often exceed 30% of your total budget. Choose your launch vehicle wisely (Falcon 9 vs Starship).',
+        icon: <Rocket className="w-8 h-8" />,
+    },
+    {
+        title: 'Operating Costs (OPEX)',
+        description: 'Space stations burn cash. Crew rotation, resupply, and ground control cost millions annually. Ensure your revenue modules can cover these expenses!',
         icon: <DollarSign className="w-8 h-8" />,
+    },
+    {
+        title: 'Viability Check',
+        description: 'The ultimate test. Your station must be profitable and pay back its investment (~15 years). Watch out for the "Not Viable" warning!',
+        icon: <TrendingUp className="w-8 h-8" />,
     },
     {
         title: 'Risk & Reliability',
@@ -39,19 +49,18 @@ const TUTORIAL_STEPS: TutorialStep[] = [
 
 const TUTORIAL_STORAGE_KEY = 'vishwakarma-tutorial-completed';
 
-export function TutorialOverlay() {
-    const [isOpen, setIsOpen] = useState(false);
+interface TutorialOverlayProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export function TutorialOverlay({ isOpen, onClose }: TutorialOverlayProps) {
     const [currentStep, setCurrentStep] = useState(0);
 
+    // Reset step when opened
     useEffect(() => {
-        // Check if tutorial was already completed
-        const completed = localStorage.getItem(TUTORIAL_STORAGE_KEY);
-        if (!completed) {
-            // Show tutorial after a short delay for first-time users
-            const timer = setTimeout(() => setIsOpen(true), 1000);
-            return () => clearTimeout(timer);
-        }
-    }, []);
+        if (isOpen) setCurrentStep(0);
+    }, [isOpen]);
 
     const handleNext = () => {
         if (currentStep < TUTORIAL_STEPS.length - 1) {
@@ -69,12 +78,12 @@ export function TutorialOverlay() {
 
     const handleComplete = () => {
         localStorage.setItem(TUTORIAL_STORAGE_KEY, 'true');
-        setIsOpen(false);
+        onClose();
     };
 
     const handleSkip = () => {
         localStorage.setItem(TUTORIAL_STORAGE_KEY, 'true');
-        setIsOpen(false);
+        onClose();
     };
 
     const step = TUTORIAL_STEPS[currentStep];
@@ -109,7 +118,7 @@ export function TutorialOverlay() {
                                 <div
                                     key={i}
                                     className={`w-2 h-2 rounded-full transition-colors ${i === currentStep ? 'bg-primary' :
-                                            i < currentStep ? 'bg-primary/50' : 'bg-gray-700'
+                                        i < currentStep ? 'bg-primary/50' : 'bg-gray-700'
                                         }`}
                                 />
                             ))}
@@ -134,8 +143,8 @@ export function TutorialOverlay() {
                                 onClick={handlePrev}
                                 disabled={currentStep === 0}
                                 className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm transition-colors ${currentStep === 0
-                                        ? 'text-gray-600 cursor-not-allowed'
-                                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                                    ? 'text-gray-600 cursor-not-allowed'
+                                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
                                     }`}
                             >
                                 <ChevronLeft className="w-4 h-4" />

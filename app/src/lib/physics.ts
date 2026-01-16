@@ -17,6 +17,8 @@ export const INITIAL_METRICS: StationMetrics = {
     netPresentValue: 0,
     internalRateReturn: 0,
     breakEvenMonths: 0,
+    totalLaunchCost: 0,
+    totalInvestment: 500_000_000,
 };
 
 export function calculateMetrics(modules: InstalledModule[]): StationMetrics {
@@ -84,6 +86,8 @@ export function calculateMetrics(modules: InstalledModule[]): StationMetrics {
         netPresentValue: 0,
         internalRateReturn: 0,
         breakEvenMonths: 0,
+        totalLaunchCost: 0,
+        totalInvestment: capex, // Launch cost added in store
     };
 }
 

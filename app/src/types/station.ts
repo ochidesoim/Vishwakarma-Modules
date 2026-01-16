@@ -19,6 +19,7 @@ export interface ModuleSpec {
     // Financial Specs
     capex: number;       // $ (USD)
     revenue: number;     // $/month
+    revenueAssumption?: string; // Tooltip explanation
     opex: number;        // $/month
 
     // Constraints
@@ -51,6 +52,8 @@ export interface StationMetrics {
     crewCapacity: number;
 
     totalCapex: number;
+    totalLaunchCost: number; // New field
+    totalInvestment: number; // Capex + Launch
     monthlyRevenue: number;
     monthlyOpex: number;
 

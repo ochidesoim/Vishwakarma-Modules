@@ -38,7 +38,8 @@ export const MODULE_SPECS: Record<string, ModuleSpec> = {
         volume: 45,
         data: 50,
         capex: 270_000_000,
-        revenue: 300_000,
+        revenue: 100_000, // Reduced from 300k
+        revenueAssumption: "Conservative estimate given unproven early market demand for microgravity R&D.",
         opex: 50_000,
         requires: ['airlock']
     },
@@ -56,7 +57,8 @@ export const MODULE_SPECS: Record<string, ModuleSpec> = {
         volume: 60,
         data: 80,
         capex: 330_000_000,
-        revenue: 500_000,
+        revenue: 150_000, // Reduced from 500k
+        revenueAssumption: "Lowered to reflect logistic constraints and current market for ZBLAN fiber.",
         opex: 80_000,
         requires: ['airlock'] // For maintenance
     },
@@ -74,7 +76,8 @@ export const MODULE_SPECS: Record<string, ModuleSpec> = {
         volume: 30,
         data: 1000, // High bandwidth
         capex: 210_000_000,
-        revenue: 150_000,
+        revenue: 40_000, // Reduced from 150k
+        revenueAssumption: "Limited by downlink bandwidth costs and latency for edge computing.",
         opex: 30_000,
         requires: []
     },
@@ -92,125 +95,132 @@ export const MODULE_SPECS: Record<string, ModuleSpec> = {
         volume: 80,
         data: 10,
         capex: 240_000_000,
-        revenue: 50_000, // Cost saving mostly, simplified as low revenue
+        revenue: 20_000, // Reduced from 50k
+        revenueAssumption: "Research grants only. Food production offsets OPEX but generates little direct revenue.",
         opex: 20_000,
         requires: ['airlock']
     },
     repair: {
         type: 'repair',
         title: 'Service Station',
-        description: 'Automated robotic facility for on-orbit satellite refueling, repair, and component upgrades.',
+        description: 'Robotic arms and fuel depot for satellite servicing and debris removal.',
         icon: '🔧',
-        color: 'bg-gray-500/50',
+        color: 'bg-orange-500/50',
         mass: 14000,
         power_cont: 4,
-        power_peak: 30, // High peak for robotic arms/welding
+        power_peak: 10,
         thermal: 8,
         crew: 0,
-        volume: 100, // Open bay
+        volume: 40,
         data: 20,
         capex: 350_000_000,
-        revenue: 30_000_000 / 12, // Irregular large payments, averaged ~2.5M? No, PRD says variable. Let's say high.
-        opex: 100_000,
+        revenue: 500_000, // Reduced from 2.5M
+        revenueAssumption: "Satellite servicing market is nascent. Assumes ~1 major mission every 2 months.",
+        opex: 60_000,
         requires: []
     },
     power: {
         type: 'power',
         title: 'Power Station',
-        description: 'Advanced solar arrays and batteries. Increases station power and cooling.',
-        icon: '⚡️',
+        description: 'Large solar array trusses and batteries to expand station capacity.',
+        icon: '⚡',
         color: 'bg-yellow-500/50',
         mass: 11000,
         power_cont: 0,
         power_peak: 0,
         thermal: 0,
         crew: 0,
-        volume: 20,
+        volume: 0,
         data: 5,
         capex: 180_000_000,
-        revenue: 5_000, // Selling power?
+        revenue: 5_000,
+        revenueAssumption: "Power sales to visiting vehicles only.",
         opex: 10_000,
         provides: {
             power: 40,
-            thermal: 20
-        }
+            thermal: 20,
+        },
+        requires: []
     },
     health: {
         type: 'health',
         title: 'Health Care',
-        description: 'Telemedicine hub and human physiology research.',
-        icon: '⚕️',
+        description: 'Medical bay for crew health monitoring and biological experiments.',
+        icon: '🏥',
         color: 'bg-red-500/50',
         mass: 9000,
         power_cont: 6,
-        power_peak: 10,
+        power_peak: 8,
         thermal: 6,
-        crew: 2, // Medics
-        volume: 40,
-        data: 100,
+        crew: 1,
+        volume: 35,
+        data: 40,
         capex: 290_000_000,
-        revenue: 200_000,
-        opex: 60_000,
+        revenue: 50_000, // Reduced from 200k
+        revenueAssumption: "Internal crew benefit primarily. Validation studies for pharma are intermittent.",
+        opex: 40_000,
         requires: ['airlock']
     },
     airlock: {
         type: 'airlock',
         title: 'Crew Airlock',
-        description: 'Provides Extra-Vehicular Activity (EVA) capabilities. Essential for crewed operations and station maintenance.',
-        icon: '🧑‍🚀',
-        color: 'bg-cyan-500/50',
+        description: 'Required for EVA activities, maintenance, and crew transfer.',
+        icon: '🚪',
+        color: 'bg-slate-600',
         mass: 6000,
         power_cont: 2,
-        power_peak: 5,
+        power_peak: 4,
         thermal: 2,
         crew: 0,
         volume: 15,
-        data: 10,
+        data: 5,
         capex: 150_000_000,
         revenue: 0,
-        opex: 20_000,
-        provides: {
-            crew: 0 // Doesn't provide quarters, but enables crew access
-        }
+        opex: 15_000,
+        requires: []
     },
     cargo: {
         type: 'cargo',
         title: 'Cargo Bay',
-        description: 'Unpressurized logistics interface for materials transfer.',
+        description: 'Pressurized and unpressurized storage for supplies and experiments.',
         icon: '📦',
-        color: 'bg-orange-500/50',
+        color: 'bg-amber-700/50',
         mass: 5000,
         power_cont: 1,
-        power_peak: 5,
+        power_peak: 2,
         thermal: 1,
         crew: 0,
-        volume: 150,
-        data: 5,
+        volume: 50,
+        data: 0,
         capex: 100_000_000,
-        revenue: 80_000,
+        revenue: 80_000, // Kept similar as logistics is steady
+        revenueAssumption: "Storage fees for experiments and 3rd party supplies.",
         opex: 5_000,
         provides: {
-            storage: 20000
-        }
+            storage: 10000
+        },
+        requires: []
     },
     quarters: {
         type: 'quarters',
         title: 'Crew Quarters',
         description: 'Habitation module with private berths, galley, and life support for long-duration missions.',
         icon: '🛏️',
-        color: 'bg-indigo-500/50',
+        color: 'bg-indigo-900/50',
         mass: 14000,
         power_cont: 6,
-        power_peak: 10,
+        power_peak: 8,
         thermal: 8,
-        crew: 0, // Crew slots required (none needed to operate)
-        volume: 90,
+        crew: 0,
+        volume: 60,
         data: 20,
         capex: 320_000_000,
-        revenue: 100_000, // Space tourism potential
-        opex: 40_000,
+        revenue: 100_000,
+        revenueAssumption: "Space tourism or leased astronaut berths.",
+        opex: 30_000,
         provides: {
-            crew: 6 // Provides capacity for 6 crew members
-        }
+            crew: 4
+        },
+        requires: []
     }
 };

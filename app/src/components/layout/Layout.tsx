@@ -8,15 +8,17 @@ interface LayoutProps {
     onOpenMethodology: () => void;
     onToggleComparison: () => void;
     isComparisonOpen: boolean;
+    onOpenTutorial: () => void;
 }
 
-export function Layout({ children, leftPanel, rightPanel, onOpenMethodology, onToggleComparison, isComparisonOpen }: LayoutProps) {
+export function Layout({ children, leftPanel, rightPanel, onOpenMethodology, onToggleComparison, isComparisonOpen, onOpenTutorial }: LayoutProps) {
     return (
         <div className="min-h-screen bg-background text-gray-200 flex flex-col font-body">
             <Header
                 onOpenMethodology={onOpenMethodology}
                 onToggleComparison={onToggleComparison}
                 isComparisonOpen={isComparisonOpen}
+                onOpenTutorial={onOpenTutorial}
             />
 
             <main className="flex-1 p-6 grid grid-cols-12 gap-6 h-[calc(100vh-64px)] overflow-hidden">

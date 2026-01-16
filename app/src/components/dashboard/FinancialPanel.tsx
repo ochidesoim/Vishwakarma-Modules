@@ -4,14 +4,25 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine
 } from 'recharts';
 import { calculateNPV, calculateIRR, calculateBreakEven } from '../../lib/financials';
+import { LAUNCH_VEHICLES, type LaunchVehicleType } from '../../lib/launch';
+import { getOPEXCategories, calculateAnnualOPEX } from '../../lib/opex';
+import { Rocket } from 'lucide-react'; // Assuming Rocket icon exists or use generic
 
 export function FinancialPanel() {
-    const { metrics, financialParameters, setFinancialParameter } = useStationStore();
+    const { metrics, financialParameters, setFinancialParameter, launchVehicle, setLaunchVehicle } = useStationStore();
+
+    // Calculate OPEX breakdown for display
+    const opexBreakdown = calculateAnnualOPEX(
+        metrics.totalInvestment,
+        metrics.crewCapacity > 0,
+        metrics.crewCapacity
+    );
+    const opexCategories = getOPEXCategories(opexBreakdown);
 
     // Generate Cash Flow Data for Chart (10 years)
     const data = [];
     const monthlyNet = metrics.monthlyRevenue * financialParameters.revenueMultiplier - metrics.monthlyOpex;
-    let cumulative = -metrics.totalCapex;
+    let cumulative = -metrics.totalInvestment; // Start with negative CAPEX + Launch
 
     for (let year = 0; year <= 10; year++) {
         data.push({
@@ -86,6 +97,26 @@ export function FinancialPanel() {
                 </div>
 
                 <div className="p-4 bg-background-surface rounded-lg border border-white/5">
+                    <div className="text-xs text-gray-400 mb-1">Total Investment</div>
+                    <div className="font-mono text-lg text-white">
+                        {formatCurrency(metrics.totalInvestment)}
+                    </div>
+                    <div className="text-[10px] text-gray-500 mt-1">
+                        Incl. {formatCurrency(metrics.totalLaunchCost)} Launch
+                    </div>
+                </div>
+
+                <div className="p-4 bg-background-surface rounded-lg border border-white/5">
+                    <div className="text-xs text-gray-400 mb-1">Annual OPEX</div>
+                    <div className="font-mono text-xl text-status-critical">
+                        {formatCurrency(metrics.monthlyOpex * 12)}
+                    </div>
+                    <div className="text-[10px] text-gray-500 mt-1">
+                        {metrics.crewCapacity > 0 ? 'Crewed Station' : 'Uncrewed'}
+                    </div>
+                </div>
+
+                <div className="p-4 bg-background-surface rounded-lg border border-white/5">
                     <div className="text-xs text-gray-400 mb-1">Monthly Net</div>
                     <div className={`font-mono text-xl ${monthlyNet > 0 ? 'text-status-success' : 'text-status-critical'}`}>
                         {formatCurrency(monthlyNet)}
@@ -148,6 +179,48 @@ export function FinancialPanel() {
                         onChange={(e) => setFinancialParameter('discountRate', parseFloat(e.target.value))}
                         className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
                     />
+                </div>
+            </div>
+
+            {/* Launch Vehicle Selection */}
+            <div className="space-y-3 pt-4 border-t border-white/5">
+                <h3 className="text-sm font-display text-gray-400 flex items-center">
+                    <Rocket className="w-3 h-3 mr-2" /> Launch Configuration
+                </h3>
+
+                <div className="bg-background-surface p-3 rounded border border-white/5">
+                    <select
+                        value={launchVehicle}
+                        onChange={(e) => setLaunchVehicle(e.target.value as LaunchVehicleType)}
+                        className="w-full bg-gray-900 border border-gray-700 text-white rounded p-2 text-sm mb-2"
+                    >
+                        {Object.values(LAUNCH_VEHICLES).map(v => (
+                            <option key={v.id} value={v.id} disabled={!v.available}>
+                                {v.name} - {formatCurrency(v.costPerLaunch)}/launch
+                            </option>
+                        ))}
+                    </select>
+                    <div className="flex justify-between text-xs text-gray-400">
+                        <span>Payload: {formatCurrency(LAUNCH_VEHICLES[launchVehicle].payloadToLEO).replace('$', '')} kg</span>
+                        <span>{(metrics.totalMass / LAUNCH_VEHICLES[launchVehicle].payloadToLEO).toFixed(1)} launches needed</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* OPEX Breakdown */}
+            <div className="space-y-3 pt-4 border-t border-white/5">
+                <h3 className="text-sm font-display text-gray-400">Annual OPEX Breakdown</h3>
+                <div className="bg-background-surface rounded p-2">
+                    {opexCategories.map((cat, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-white/5 last:border-0">
+                            <span className="text-gray-400 truncate pr-2">{cat.category}</span>
+                            <span className="font-mono text-white">{formatCurrency(cat.amount)}</span>
+                        </div>
+                    ))}
+                    <div className="flex justify-between items-center text-xs py-1 mt-1 font-bold">
+                        <span className="text-gray-300">Total</span>
+                        <span className="font-mono text-status-critical">{formatCurrency(opexBreakdown.annualTotal)}</span>
+                    </div>
                 </div>
             </div>
 

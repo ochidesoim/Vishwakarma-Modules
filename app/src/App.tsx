@@ -11,6 +11,8 @@ import { ReliabilityPanel } from './components/dashboard/ReliabilityPanel';
 import { PowerFlowPanel } from './components/dashboard/PowerFlowPanel';
 import { ThermalHeatmap } from './components/dashboard/ThermalHeatmap';
 import { CrewTimePanel } from './components/dashboard/CrewTimePanel';
+import { WarningsPanel } from './components/dashboard/WarningsPanel';
+import { ViabilityPanel } from './components/dashboard/ViabilityPanel';
 import { DndProvider } from './components/dnd/DndProvider';
 import { ToastProvider, useToast } from './components/ui/Toast';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
@@ -130,12 +132,24 @@ function AppContent() {
     showToast(`Selected ${MODULE_SPECS[moduleType].title}. Click a Bay to install.`, 'info');
   };
 
+  // Tutorial State
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  // Auto-open tutorial on first visit check
+  useState(() => {
+    const completed = localStorage.getItem('vishwakarma-tutorial-completed');
+    if (!completed) {
+      setTimeout(() => setIsTutorialOpen(true), 1000);
+    }
+  });
+
   return (
     <DndProvider onDrop={handleDrop}>
       <Layout
         onOpenMethodology={methodology.open}
         onToggleComparison={() => setIsComparisonOpen(!isComparisonOpen)}
         isComparisonOpen={isComparisonOpen}
+        onOpenTutorial={() => setIsTutorialOpen(true)}
         leftPanel={
           <div className="space-y-6">
             {/* Stable Layout to prevent 3D View Unmount */}
@@ -157,24 +171,29 @@ function AppContent() {
           <ComparisonView />
         ) : (
           <>
+            <WarningsPanel />
             <OptimizationPanel onApply={handleOptimizationApply} />
             <RiskPanel />
             <ReliabilityPanel />
             {/* Tier 3: Visualization Panels */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-6">
               <PowerFlowPanel />
               <ThermalHeatmap />
               <CrewTimePanel />
             </div>
             <SystemsStatus />
+            <ViabilityPanel />
             <FinancialPanel />
             <MissionTimeline />
           </>
         )}
       </Layout>
 
-      {/* Tutorial Overlay for first-time users */}
-      <TutorialOverlay />
+      {/* Tutorial Overlay */}
+      <TutorialOverlay
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+      />
 
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
