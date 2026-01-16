@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { InstalledModule, ModuleType, StationMetrics } from '../types/station';
-import { calculateMetrics, INITIAL_METRICS, validateInstall } from '../lib/physics';
+import { calculateMetrics, INITIAL_METRICS, validateInstall, type ValidationResult } from '../lib/physics';
 import { calculateNPV, calculateIRR, calculateBreakEven } from '../lib/financials';
 import { MODULE_SPECS } from '../data/modules';
 
@@ -10,7 +10,7 @@ interface StationState {
     metrics: StationMetrics;
 
     // Actions
-    installModule: (bayId: number, type: ModuleType) => { success: boolean; reason?: string };
+    installModule: (bayId: number, type: ModuleType) => ValidationResult;
     removeModule: (bayId: number) => void;
     resetStation: () => void;
 
@@ -20,6 +20,24 @@ interface StationState {
         revenueMultiplier: number; // Sensitivity
     };
     setFinancialParameter: (key: string, value: number) => void;
+    // Comparison Mode
+    savedConfigs: SavedConfiguration[];
+    saveConfiguration: (name: string) => void;
+    deleteConfiguration: (id: string) => void;
+    loadConfiguration: (id: string) => void;
+}
+
+export interface SavedConfiguration {
+    id: string;
+    name: string;
+    date: string;
+    modules: InstalledModule[];
+    financialParameters: {
+        discountRate: number;
+        revenueMultiplier: number;
+    };
+    // Store snapshot of metrics too for quick compare without recalc
+    metrics: StationMetrics;
 }
 
 export const useStationStore = create<StationState>()(
@@ -32,17 +50,51 @@ export const useStationStore = create<StationState>()(
                 revenueMultiplier: 1.0,
             },
 
+            savedConfigs: [],
+
+            saveConfiguration: (name) => {
+                const { modules, metrics, financialParameters, savedConfigs } = get();
+                const newConfig: SavedConfiguration = {
+                    id: crypto.randomUUID(),
+                    name,
+                    date: new Date().toISOString(),
+                    modules: [...modules],
+                    financialParameters: { ...financialParameters },
+                    metrics: { ...metrics }
+                };
+                set({ savedConfigs: [newConfig, ...savedConfigs] });
+            },
+
+            deleteConfiguration: (id) => {
+                const { savedConfigs } = get();
+                set({ savedConfigs: savedConfigs.filter(c => c.id !== id) });
+            },
+
+            loadConfiguration: (id) => {
+                const { savedConfigs } = get();
+                const config = savedConfigs.find(c => c.id === id);
+                if (config) {
+                    set({
+                        modules: [...config.modules],
+                        financialParameters: { ...config.financialParameters },
+                        metrics: { ...config.metrics } // Assuming metrics are valid
+                    });
+                    // Recalculate just in case store logic changed? 
+                    // Physics usually deterministic.
+                }
+            },
+
             installModule: (bayId, type) => {
                 const { modules, metrics } = get();
 
                 // 1. Check if bay is occupied
                 if (modules.find(m => m.bayId === bayId)) {
-                    return { success: false, reason: 'Bay Occupied' };
+                    return { valid: false, reason: 'Bay Occupied' };
                 }
 
                 // 2. Validate Constraints
                 const valid = validateInstall(type, metrics, modules);
-                if (!valid.valid) return { success: false, reason: valid.reason };
+                if (!valid.valid) return valid;
 
                 // 3. Install
                 const newModule: InstalledModule = {
@@ -64,7 +116,7 @@ export const useStationStore = create<StationState>()(
                     metrics: { ...newMetrics, ...financials }
                 });
 
-                return { success: true };
+                return { valid: true };
             },
 
             removeModule: (bayId) => {
@@ -99,7 +151,7 @@ export const useStationStore = create<StationState>()(
                 set({ modules: [], metrics: INITIAL_METRICS });
             },
 
-            setFinancialParameter: (key, value) => {
+            setFinancialParameter: (key: string, value: number) => {
                 const params = { ...get().financialParameters, [key]: value };
                 const metrics = get().metrics; // Base metrics need recalculation? 
                 // Actually metrics.totalCapex etc derive from modules.

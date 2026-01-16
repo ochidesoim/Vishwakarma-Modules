@@ -37,12 +37,7 @@ export function calculateMetrics(modules: InstalledModule[]): StationMetrics {
 
     modules.forEach(m => {
         const spec = MODULE_SPECS[m.type];
-        if (m.status === 'active') { // Only active modules consume/produce? Or all installed ones?
-            // Assuming installed modules consume resources regardless, but maybe revenue depends on status.
-            // PRD Flow 6.4: "Mark dependents as non-operational ... Recalculate metrics (exclude inactive revenue)"
-            // So Mass/Power/Thermal is static (installed), Revenue/Opex might be dynamic.
-            // For simplicity, let's assume installed = consumes power/mass. Active = generates revenue.
-
+        if (m.status === 'active') {
             mass += spec.mass;
             powerCont += spec.power_cont;
             powerPeak += spec.power_peak;
@@ -51,7 +46,7 @@ export function calculateMetrics(modules: InstalledModule[]): StationMetrics {
             volume += spec.volume;
 
             powerGen += spec.provides?.power || 0;
-            thermalCap += spec.provides?.thermal || 0; // "cooling capacity"
+            thermalCap += spec.provides?.thermal || 0;
             crewCap += spec.provides?.crew || 0;
 
             capex += spec.capex;
@@ -59,11 +54,9 @@ export function calculateMetrics(modules: InstalledModule[]): StationMetrics {
                 revenue += spec.revenue;
                 opex += spec.opex;
             } else {
-                // Inactive modules might still cost OPEX (maintenance)? Let's say yes.
-                opex += spec.opex * 0.5; // Reduced opex?
+                opex += spec.opex * 0.5;
             }
         } else {
-            // If inactive, maybe just mass and capex?
             mass += spec.mass;
             capex += spec.capex;
             volume += spec.volume;
@@ -71,7 +64,7 @@ export function calculateMetrics(modules: InstalledModule[]): StationMetrics {
             powerPeak += spec.power_peak;
             thermal += spec.thermal;
             revenue += 0;
-            opex += spec.opex; // Still need maintenance
+            opex += spec.opex;
         }
     });
 
@@ -84,13 +77,27 @@ export function calculateMetrics(modules: InstalledModule[]): StationMetrics {
         totalVolume: volume,
         powerGeneration: powerGen,
         thermalCapacity: thermalCap,
-        crewCapacity: crewCap,
+        crewCapacity: crew,
         totalCapex: capex,
         monthlyRevenue: revenue,
         monthlyOpex: opex,
-        netPresentValue: 0, // Calculated separately
+        netPresentValue: 0,
         internalRateReturn: 0,
         breakEvenMonths: 0,
+    };
+}
+
+// ==================== ENHANCED VALIDATION (U-03C) ====================
+
+export interface ValidationResult {
+    valid: boolean;
+    reason?: string;
+    details?: {
+        constraint: 'power' | 'thermal' | 'dependency' | 'crew';
+        current: number;
+        required: number;
+        available: number;
+        suggestions: string[];
     };
 }
 
@@ -98,28 +105,172 @@ export function validateInstall(
     moduleType: ModuleType,
     currentMetrics: StationMetrics,
     existingModules: InstalledModule[]
-): { valid: boolean; reason?: string } {
+): ValidationResult {
     const spec = MODULE_SPECS[moduleType];
 
     // Power Check
-    if (currentMetrics.totalPowerCont + spec.power_cont > currentMetrics.powerGeneration) {
-        return { valid: false, reason: `Insufficient Power: Need ${spec.power_cont}kW, Have ${currentMetrics.powerGeneration - currentMetrics.totalPowerCont}kW` };
+    const availablePower = currentMetrics.powerGeneration - currentMetrics.totalPowerCont;
+    if (spec.power_cont > availablePower) {
+        return {
+            valid: false,
+            reason: `Insufficient Power: Need ${spec.power_cont}kW, Have ${availablePower.toFixed(1)}kW`,
+            details: {
+                constraint: 'power',
+                current: currentMetrics.totalPowerCont,
+                required: spec.power_cont,
+                available: availablePower,
+                suggestions: [
+                    'Add Power Station (+40kW generation)',
+                    'Remove high-power modules (Data Center, Manufacturing)'
+                ]
+            }
+        };
     }
 
     // Thermal Check
-    if (currentMetrics.totalThermal + spec.thermal > currentMetrics.thermalCapacity) {
-        return { valid: false, reason: `Thermal Limit Exceeded: Need ${spec.thermal}kW cooling.` };
+    const availableThermal = currentMetrics.thermalCapacity - currentMetrics.totalThermal;
+    if (spec.thermal > availableThermal) {
+        return {
+            valid: false,
+            reason: `Thermal Limit: Need ${spec.thermal}kW cooling, Have ${availableThermal.toFixed(1)}kW`,
+            details: {
+                constraint: 'thermal',
+                current: currentMetrics.totalThermal,
+                required: spec.thermal,
+                available: availableThermal,
+                suggestions: [
+                    'Add Power Station (+40kW cooling)',
+                    'Remove high-heat modules (Data Center, Manufacturing)'
+                ]
+            }
+        };
     }
 
-    // Dependency Check (Airlock)
+    // Dependency Check
     if (spec.requires && spec.requires.length > 0) {
         for (const req of spec.requires) {
             const hasReq = existingModules.some(m => m.type === req && m.status === 'active');
             if (!hasReq) {
-                return { valid: false, reason: `Requires active ${MODULE_SPECS[req].title}` };
+                return {
+                    valid: false,
+                    reason: `Requires active ${MODULE_SPECS[req].title}`,
+                    details: {
+                        constraint: 'dependency',
+                        current: 0,
+                        required: 1,
+                        available: 0,
+                        suggestions: [
+                            `Install ${MODULE_SPECS[req].title} first`,
+                            `${spec.title} needs ${MODULE_SPECS[req].title} for crew access`
+                        ]
+                    }
+                };
             }
         }
     }
 
     return { valid: true };
 }
+
+// ==================== CASCADING DEPENDENCIES (U-03B) ====================
+
+/**
+ * Get modules that depend on the given module type
+ */
+export function getDependentModules(
+    moduleType: ModuleType,
+    existingModules: InstalledModule[]
+): InstalledModule[] {
+    return existingModules.filter(m => {
+        const spec = MODULE_SPECS[m.type];
+        return spec.requires?.includes(moduleType);
+    });
+}
+
+/**
+ * Get warning message for cascading removal
+ */
+export function getCascadingWarning(
+    moduleType: ModuleType,
+    existingModules: InstalledModule[]
+): { hasDependents: boolean; message: string; dependents: string[] } {
+    const dependents = getDependentModules(moduleType, existingModules);
+
+    if (dependents.length === 0) {
+        return { hasDependents: false, message: '', dependents: [] };
+    }
+
+    const dependentNames = dependents.map(m => MODULE_SPECS[m.type].title);
+    return {
+        hasDependents: true,
+        message: `Removing this will disable ${dependents.length} dependent module(s): ${dependentNames.join(', ')}`,
+        dependents: dependentNames
+    };
+}
+
+// ==================== STATION KEEPING (U-02D) ====================
+
+export interface StationKeepingData {
+    propellantPerMonth: number; // kg
+    reboostFrequency: string; // days
+    tenYearFuelMass: number; // kg
+    tenYearFuelCost: number; // $
+    orbitalAltitude: number; // km
+    inclination: number; // degrees
+}
+
+/**
+ * Calculate station-keeping requirements based on total mass
+ */
+export function calculateStationKeeping(totalMass: number): StationKeepingData {
+    // ISS reference: ~400km altitude, ~200kg/month propellant for ~420,000kg station
+    // Scale proportionally to mass
+    const issReferenceMass = 420000; // kg
+    const issMonthlyPropellant = 200; // kg
+
+    const scaleFactor = totalMass / issReferenceMass;
+    const propellantPerMonth = Math.round(issMonthlyPropellant * scaleFactor);
+
+    // Reboost every 30-45 days depending on solar activity
+    const reboostDays = totalMass > 100000 ? '30-45' : '45-60';
+
+    const tenYearFuelMass = propellantPerMonth * 120; // 10 years
+    const fuelCostPerKg = 5000; // $ per kg to orbit
+    const tenYearFuelCost = tenYearFuelMass * fuelCostPerKg;
+
+    return {
+        propellantPerMonth,
+        reboostFrequency: reboostDays,
+        tenYearFuelMass,
+        tenYearFuelCost,
+        orbitalAltitude: 400,
+        inclination: 51.6
+    };
+}
+
+// ==================== LAUNCH WINDOWS (U-02B) ====================
+
+export interface LaunchWindowData {
+    nextWindow: string; // "14 days"
+    windowsPerQuarter: number;
+    optimalMonths: string[];
+}
+
+/**
+ * Get launch window information
+ */
+export function getLaunchWindows(): LaunchWindowData {
+    // Simulate next launch window based on current date
+    const now = new Date();
+    const dayOfMonth = now.getDate();
+
+    // Launch windows roughly every 2 weeks for ISS-compatible orbit
+    const daysUntilNext = 14 - (dayOfMonth % 14);
+
+    return {
+        nextWindow: `${daysUntilNext} days`,
+        windowsPerQuarter: 6,
+        optimalMonths: ['March', 'June', 'September', 'December']
+    };
+}
+

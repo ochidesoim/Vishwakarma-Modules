@@ -11,6 +11,96 @@ interface ExportData {
     };
 }
 
+// ==================== SHAREABLE URL (U-04C) ====================
+
+interface CompactConfig {
+    m: { b: number; t: string; s: string }[]; // modules: bayId, type, status
+    f: { d: number; r: number }; // financial: discountRate, revenueMultiplier
+}
+
+/**
+ * Encode current configuration to a shareable URL
+ */
+export function encodeConfigToURL(
+    modules: InstalledModule[],
+    financialParameters: { discountRate: number; revenueMultiplier: number }
+): string | null {
+    try {
+        const compact: CompactConfig = {
+            m: modules.map(m => ({ b: m.bayId, t: m.type, s: m.status })),
+            f: { d: financialParameters.discountRate, r: financialParameters.revenueMultiplier }
+        };
+
+        const json = JSON.stringify(compact);
+        const base64 = btoa(json);
+        const url = `${window.location.origin}${window.location.pathname}?config=${encodeURIComponent(base64)}`;
+
+        // Check URL length limit (2048 chars for most browsers)
+        if (url.length > 2000) {
+            return null; // Too long
+        }
+
+        return url;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Decode configuration from URL parameter
+ */
+export function decodeConfigFromURL(): {
+    modules: { bayId: number; type: string; status: string }[];
+    financialParameters: { discountRate: number; revenueMultiplier: number };
+} | null {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const configParam = params.get('config');
+        if (!configParam) return null;
+
+        const json = atob(decodeURIComponent(configParam));
+        const compact: CompactConfig = JSON.parse(json);
+
+        return {
+            modules: compact.m.map(m => ({
+                bayId: m.b,
+                type: m.t,
+                status: m.s
+            })),
+            financialParameters: {
+                discountRate: compact.f.d,
+                revenueMultiplier: compact.f.r
+            }
+        };
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Copy shareable URL to clipboard
+ */
+export async function copyShareableURL(
+    modules: InstalledModule[],
+    financialParameters: { discountRate: number; revenueMultiplier: number }
+): Promise<{ success: boolean; message: string }> {
+    const url = encodeConfigToURL(modules, financialParameters);
+
+    if (!url) {
+        return {
+            success: false,
+            message: 'Configuration too complex for URL. Use JSON export instead.'
+        };
+    }
+
+    try {
+        await navigator.clipboard.writeText(url);
+        return { success: true, message: 'Link copied to clipboard!' };
+    } catch {
+        return { success: false, message: 'Failed to copy to clipboard' };
+    }
+}
+
 /**
  * Export configuration as JSON file
  */

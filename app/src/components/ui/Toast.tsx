@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, createContext, useContext } from 'rea
 import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
-import { CheckCircle, XCircle, AlertTriangle, X } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, X, Info } from 'lucide-react';
 
-type ToastType = 'success' | 'error' | 'warning';
+type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 interface Toast {
     id: string;
@@ -73,12 +73,14 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
         success: CheckCircle,
         error: XCircle,
         warning: AlertTriangle,
+        info: Info,
     };
 
     const colors = {
         success: 'border-green-500 bg-green-500/10 text-green-400',
         error: 'border-red-500 bg-red-500/10 text-red-400',
         warning: 'border-yellow-500 bg-yellow-500/10 text-yellow-400',
+        info: 'border-blue-500 bg-blue-500/10 text-blue-400',
     };
 
     const Icon = icons[toast.type];

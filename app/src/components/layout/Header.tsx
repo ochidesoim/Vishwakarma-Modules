@@ -1,12 +1,14 @@
-import { Rocket, FileText, Share2, Settings, FileSpreadsheet, BookOpen } from 'lucide-react';
+import { Rocket, FileText, Share2, FileSpreadsheet, BookOpen, Scale } from 'lucide-react';
 import { useStationStore } from '../../store/useStationStore';
 import { exportJSON, exportPDF, exportCSV } from '../../lib/export';
 
 interface HeaderProps {
     onOpenMethodology: () => void;
+    onToggleComparison: () => void;
+    isComparisonOpen: boolean;
 }
 
-export function Header({ onOpenMethodology }: HeaderProps) {
+export function Header({ onOpenMethodology, onToggleComparison, isComparisonOpen }: HeaderProps) {
     const { modules, metrics, financialParameters } = useStationStore();
 
     const handleExportPDF = () => {
@@ -30,6 +32,16 @@ export function Header({ onOpenMethodology }: HeaderProps) {
 
             <div className="flex items-center space-x-2">
                 <button
+                    onClick={onToggleComparison}
+                    className={`flex items-center px-3 py-2 text-sm font-mono rounded transition-colors border ${isComparisonOpen ? 'bg-purple-600 border-purple-500 text-white' : 'text-purple-400 border-purple-500/30 hover:bg-purple-900/20'}`}
+                    title="Compare Snapshots"
+                >
+                    <Scale className="w-4 h-4 mr-2" />
+                    COMPARE
+                </button>
+                <div className="h-4 w-px bg-white/10 mx-2" />
+
+                <button
                     onClick={onOpenMethodology}
                     className="flex items-center px-3 py-2 text-sm font-mono text-primary/80 hover:text-primary hover:bg-primary/10 rounded transition-colors border border-transparent"
                     title="Methodology & Assumptions"
@@ -38,10 +50,7 @@ export function Header({ onOpenMethodology }: HeaderProps) {
                     METHODOLOGY
                 </button>
                 <div className="h-4 w-px bg-white/10 mx-2" />
-                <button className="flex items-center px-3 py-2 text-sm font-mono text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors border border-transparent hover:border-border">
-                    <Settings className="w-4 h-4 mr-2" />
-                    PRESETS
-                </button>
+
                 <button onClick={handleExportPDF} className="flex items-center px-3 py-2 text-sm font-mono text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors border border-transparent hover:border-border">
                     <FileText className="w-4 h-4 mr-2" />
                     PDF
@@ -58,3 +67,4 @@ export function Header({ onOpenMethodology }: HeaderProps) {
         </header>
     );
 }
+

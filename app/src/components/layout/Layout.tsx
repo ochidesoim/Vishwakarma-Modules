@@ -6,12 +6,18 @@ interface LayoutProps {
     leftPanel: ReactNode;
     rightPanel: ReactNode;
     onOpenMethodology: () => void;
+    onToggleComparison: () => void;
+    isComparisonOpen: boolean;
 }
 
-export function Layout({ children, leftPanel, rightPanel, onOpenMethodology }: LayoutProps) {
+export function Layout({ children, leftPanel, rightPanel, onOpenMethodology, onToggleComparison, isComparisonOpen }: LayoutProps) {
     return (
         <div className="min-h-screen bg-background text-gray-200 flex flex-col font-body">
-            <Header onOpenMethodology={onOpenMethodology} />
+            <Header
+                onOpenMethodology={onOpenMethodology}
+                onToggleComparison={onToggleComparison}
+                isComparisonOpen={isComparisonOpen}
+            />
 
             <main className="flex-1 p-6 grid grid-cols-12 gap-6 h-[calc(100vh-64px)] overflow-hidden">
                 {/* Left: Station View (Grid + 3D) */}
